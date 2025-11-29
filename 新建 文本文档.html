@@ -3,43 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cassette Futurism UI - 16:9 Fixed Ratio</title>
+    <title>Cassette Futurism UI - Day/Night Mode</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
-        /* --- 全局变量 --- */
+        /* --- 全局变量 (默认黑夜模式) --- */
         :root {
-            --cf-bg-outer: #000000; 
-            --cf-bg-dark: #121212;
-            --cf-bg-panel: #262626;
-            --cf-bg-screen: #080808;
+            /* 基础背景 */
+            --cf-bg-outer: #000000;       /* 视口外的背景 (永远是黑的) */
+            --cf-bg-wrapper: #121212;     /* 机器外壳 */
+            --cf-bg-wrapper-pat: #1a1a1a; /* 外壳纹理色 */
+            --cf-bg-panel: #262626;       /* 面板背景 */
+            --cf-bg-screen: #080808;      /* CRT屏幕背景 */
+            
+            /* 表格与列表 */
+            --cf-bg-th: #1a1a1a;          /* 表头背景 */
+            --cf-bg-th-hover: #333333;    /* 表头悬停 */
+            --cf-bg-td: #0a0a0a;          /* 单元格背景 */
+            --cf-bg-td-hover: #161616;    /* 行悬停 */
+            --cf-bg-td-sticky: #111111;   /* 固定列背景 */
+            
+            /* 文字颜色 */
             --cf-text-main: #e6e6e6;
-            --cf-text-dim: #777;
+            --cf-text-dim: #777777;
+            --cf-text-inv: #000000;       /* 反色文本 (用于强调色背景上) */
+            
+            /* 强调色 (暗黄) */
             --cf-accent: #d4a017; 
             --cf-accent-dim: #8c6a0f;
+            --cf-accent-glow: rgba(212, 160, 23, 0.2);
+            
+            /* 状态色 */
             --cf-success: #2ecc71;
             --cf-danger: #e74c3c;
-            --cf-border: #444;
+            --cf-warn: #ffbb33;
+            
+            /* 边框与装饰 */
+            --cf-border: #444444;
+            --cf-scanline: rgba(255, 255, 255, 0.03); /* 扫描线颜色 */
+            --cf-vignette: rgba(0,0,0,0.25);          /* 屏幕暗角 */
+            
             --cf-font-mono: 'Courier New', Courier, monospace;
         }
-        /* :root {
-            --cf-bg-outer: #ffffff; 
-            --cf-bg-dark: #121212;
-            --cf-bg-panel: #262626;
-            --cf-bg-screen: #080808;
-            --cf-text-main: #e6e6e6;
-            --cf-text-dim: #777;
-            --cf-accent: #c44318; 
-            --cf-accent-dim: #8c6a0f;
-            --cf-success: #2ecc71;
-            --cf-danger: #e74c3c;
-            --cf-border: #444;
-            --cf-font-mono: 'Courier New', Courier, monospace;
-        } */
 
-        * { box-sizing: border-box; }
+        /* --- 白天模式 (覆盖变量) --- */
+        .light-mode {
+            /* 基础背景 */
+            --cf-bg-wrapper: #d1d5db;     /* 浅灰外壳 */
+            --cf-bg-wrapper-pat: #c4c8ce; /* 外壳纹理稍微深一点 */
+            --cf-bg-panel: #f5f5f5;       /* 烟白面板 */
+            --cf-bg-screen: #ffffff;      /* 纯白屏幕 */
+            
+            /* 表格与列表 */
+            --cf-bg-th: #e5e7eb;          /* 浅灰表头 */
+            --cf-bg-th-hover: #d1d5db;
+            --cf-bg-td: #ffffff;
+            --cf-bg-td-hover: #f3f4f6;
+            --cf-bg-td-sticky: #f9fafb;
+            
+            /* 文字颜色 */
+            --cf-text-main: #1f2937;      /* 深灰黑文字 */
+            --cf-text-dim: #6b7280;       /* 中灰文字 */
+            --cf-text-inv: #ffffff;       /* 强调色上的文字为白 */
+            
+            /* 强调色 (普鲁士蓝 #003153) */
+            --cf-accent: #003153;
+            --cf-accent-dim: #2c5270;
+            --cf-accent-glow: rgba(0, 49, 83, 0.15);
+            
+            /* 状态色 (稍微调暗以适应亮背景) */
+            --cf-success: #059669;
+            --cf-danger: #dc2626;
+            --cf-warn: #d97706;
+            
+            /* 边框与装饰 */
+            --cf-border: #9ca3af;         /* 中灰边框 */
+            --cf-scanline: rgba(0, 0, 0, 0.02); /* 黑色扫描线，极淡 */
+            --cf-vignette: rgba(0,0,0,0.05);    /* 暗角非常淡 */
+        }
+
+        * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
 
         body {
             margin: 0;
@@ -49,46 +94,31 @@
             font-family: var(--cf-font-mono);
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* 禁止 body 滚动，只允许内部滚动 */
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* --- 16:9 视口容器核心逻辑 --- */
+        /* --- 16:9 视口容器 --- */
         .screen-wrapper {
-            background-color: var(--cf-bg-dark);
+            background-color: var(--cf-bg-wrapper);
+            /* 使用变量控制背景纹理颜色 */
             background-image: 
-                linear-gradient(45deg, #1a1a1a 25%, transparent 25%, transparent 75%, #1a1a1a 75%, #1a1a1a),
-                linear-gradient(45deg, #1a1a1a 25%, transparent 25%, transparent 75%, #1a1a1a 75%, #1a1a1a);
+                linear-gradient(45deg, var(--cf-bg-wrapper-pat) 25%, transparent 25%, transparent 75%, var(--cf-bg-wrapper-pat) 75%, var(--cf-bg-wrapper-pat)),
+                linear-gradient(45deg, var(--cf-bg-wrapper-pat) 25%, transparent 25%, transparent 75%, var(--cf-bg-wrapper-pat) 75%, var(--cf-bg-wrapper-pat));
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
             
             aspect-ratio: 16 / 9;
             position: relative;
-            box-shadow: 0 0 100px rgba(0,0,0,1); /* 外部阴影，增加立体感 */
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
             border: 1px solid #333;
-            
-            /* 这里的逻辑是：保持16:9，同时不超过屏幕宽度的95%也不超过高度的95% */
         }
 
-        /* 屏幕较宽时，高度受限 */
-        @media (min-aspect-ratio: 16/9) {
-            .screen-wrapper {
-                height: 95vh;
-                width: auto;
-            }
-        }
+        @media (min-aspect-ratio: 16/9) { .screen-wrapper { height: 95vh; width: auto; } }
+        @media (max-aspect-ratio: 16/9) { .screen-wrapper { width: 95vw; height: auto; } }
 
-        /* 屏幕较窄时，宽度受限 */
-        @media (max-aspect-ratio: 16/9) {
-            .screen-wrapper {
-                width: 95vw;
-                height: auto;
-            }
-        }
-
-        /* --- 内部布局容器 --- */
         .cassette-layout {
             display: flex;
             flex-direction: column;
@@ -108,7 +138,7 @@
             clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
             margin-bottom: 10px;
             flex-shrink: 0;
-            height: 60px; /* 固定头部高度 */
+            height: 60px;
         }
 
         .brand-logo {
@@ -140,10 +170,10 @@
         }
 
         .nav-tab {
-            background: #1a1a1a;
+            background: var(--cf-bg-th);
             border: 1px solid var(--cf-border);
             border-bottom: none;
-            color: #666;
+            color: var(--cf-text-dim);
             padding: 0 25px;
             cursor: pointer;
             font-family: var(--cf-font-mono);
@@ -160,33 +190,35 @@
 
         .nav-tab.active {
             background: var(--cf-accent);
-            color: #000;
+            color: var(--cf-text-inv);
             font-weight: bold;
             z-index: 10;
+            border-color: var(--cf-accent);
         }
 
         /* --- 主屏幕 (CRT 容器) --- */
         .crt-frame {
             flex: 1;
             background-color: var(--cf-bg-screen);
-            border: 4px solid #333;
+            border: 4px solid var(--cf-border);
             border-radius: 4px;
             position: relative;
             display: flex;
             flex-direction: column;
-            box-shadow: inset 0 0 30px rgba(0,0,0,1);
+            box-shadow: inset 0 0 30px var(--cf-vignette);
             overflow: hidden;
-            min-height: 0; /* 关键：允许 flex 子项滚动 */
+            min-height: 0;
         }
 
+        /* CRT 扫描线效果 */
         .crt-frame::before {
             content: " ";
             display: block;
             position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
             background: 
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+                linear-gradient(var(--cf-scanline) 50%, rgba(0, 0, 0, 0) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             z-index: 99;
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
@@ -194,20 +226,19 @@
 
         /* --- 上半部分：主视图 --- */
         .main-view {
-            flex: 65; /* 占据约 65% 高度 */
+            flex: 65;
             padding: 0;
             overflow: hidden;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid var(--cf-border);
             position: relative;
             z-index: 1;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- 表格特定样式 (滚动与冻结) --- */
         .table-scroll-container {
             flex: 1;
-            overflow: auto; /* 开启双向滚动 */
+            overflow: auto;
             padding: 20px;
             position: relative;
         }
@@ -220,70 +251,69 @@
         }
 
         .rhombus-table th, .rhombus-table td {
-            padding: 10px 15px; /* 稍微减小 padding 以适应 16:9 */
-            border-right: 1px solid #222;
-            border-bottom: 1px solid #222;
+            padding: 10px 15px;
+            border-right: 1px solid var(--cf-border);
+            border-bottom: 1px solid var(--cf-border);
             white-space: nowrap;
             font-size: 0.9rem;
         }
 
-        /* 表头样式 */
         .rhombus-table th {
-            background: #1a1a1a;
+            background: var(--cf-bg-th);
             color: var(--cf-accent);
             text-align: left;
             cursor: pointer;
             position: sticky;
             top: 0;
             z-index: 20;
-            box-shadow: 0 2px 0 #000;
             transition: background 0.2s;
-        }
-
-        .rhombus-table th:hover {
-            background: #333;
-            color: #fff;
-        }
-
-        /* 第一列样式 (ID列) */
-        .rhombus-table td:first-child {
-            position: sticky;
-            left: 0;
-            background: #111;
-            z-index: 10;
-            border-right: 2px solid var(--cf-border);
-            color: #fff;
             font-weight: bold;
         }
 
-        /* 左上角那个单元格 */
+        .rhombus-table th:hover {
+            background: var(--cf-bg-th-hover);
+        }
+
+        /* ID 列 */
+        .rhombus-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: var(--cf-bg-td-sticky);
+            z-index: 10;
+            border-right: 2px solid var(--cf-border);
+            color: var(--cf-text-main);
+            font-weight: bold;
+        }
+
+        /* 左上角单元格 */
         .rhombus-table th:first-child {
             position: sticky;
             top: 0;
             left: 0;
             z-index: 30;
-            background: #222;
+            background: var(--cf-bg-th);
             border-right: 2px solid var(--cf-border);
             cursor: default;
         }
 
         .rhombus-table td {
-            background: #0a0a0a;
-            color: #aaa;
+            background: var(--cf-bg-td);
+            color: var(--cf-text-dim);
         }
 
         .rhombus-table tr:hover td {
-            background: #161616;
+            background: var(--cf-bg-td-hover);
+            color: var(--cf-text-main);
         }
         .rhombus-table tr:hover td:first-child {
-            background: #1f1f1f;
+            background: var(--cf-bg-td-hover);
         }
 
         .info-icon {
             display: inline-block;
             width: 8px;
             height: 8px;
-            background: #333;
+            background: var(--cf-text-dim);
             transform: rotate(45deg);
             margin-left: 8px;
             vertical-align: middle;
@@ -296,7 +326,7 @@
         /* --- 中间分割线 --- */
         .split-divider {
             height: 10px;
-            background: #111;
+            background: var(--cf-bg-td-sticky);
             border-top: 1px solid var(--cf-border);
             border-bottom: 1px solid var(--cf-border);
             display: flex;
@@ -306,13 +336,13 @@
             flex-shrink: 0;
         }
 
-        .diamond-dot { width: 4px; height: 4px; background: #333; transform: rotate(45deg); }
-        .diamond-dot.active { background: var(--cf-accent-dim); }
+        .diamond-dot { width: 4px; height: 4px; background: var(--cf-border); transform: rotate(45deg); }
+        .diamond-dot.active { background: var(--cf-accent); }
 
         /* --- 下半部分：日志视图 --- */
         .log-view {
-            flex: 35; /* 占据约 35% 高度 */
-            background: #050505;
+            flex: 35;
+            background: var(--cf-bg-screen);
             padding: 15px;
             overflow-y: auto;
             font-size: 0.8rem;
@@ -326,9 +356,9 @@
         .log-header-label {
             position: sticky;
             top: 0;
-            background: #050505;
-            border-bottom: 1px dashed #333;
-            color: #555;
+            background: var(--cf-bg-screen);
+            border-bottom: 1px dashed var(--cf-border);
+            color: var(--cf-text-dim);
             font-size: 0.7rem;
             padding-bottom: 5px;
             margin-bottom: 5px;
@@ -338,14 +368,14 @@
         }
 
         .log-entry { display: flex; align-items: flex-start; gap: 10px; opacity: 0.9; }
-        .log-bullet { width: 6px; height: 6px; background: #333; transform: rotate(45deg); margin-top: 6px; flex-shrink: 0; }
+        .log-bullet { width: 6px; height: 6px; background: var(--cf-border); transform: rotate(45deg); margin-top: 6px; flex-shrink: 0; }
         .log-bullet.error { background: var(--cf-danger); }
-        .log-bullet.warn { background: #ffbb33; }
+        .log-bullet.warn { background: var(--cf-warn); }
         .log-bullet.info { background: var(--cf-accent); }
 
         /* --- 弹窗样式 --- */
         .modal-overlay {
-            position: absolute; /* 改为 absolute，限制在 16:9 容器内 */
+            position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85);
             z-index: 200;
@@ -354,16 +384,21 @@
             align-items: center;
             backdrop-filter: blur(4px);
         }
+        /* 白天模式下遮罩层稍微亮一点 */
+        .light-mode .modal-overlay {
+            background: rgba(255,255,255,0.6);
+        }
 
         .modal-diamond-box {
-            width: 60%; /* 相对宽度 */
+            width: 60%;
             max-width: 500px;
             background: var(--cf-bg-panel);
             border: 2px solid var(--cf-accent);
             padding: 30px;
             position: relative;
             clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
-            box-shadow: 0 0 30px rgba(212, 160, 23, 0.2);
+            box-shadow: 0 0 30px var(--cf-accent-glow);
+            color: var(--cf-text-main);
         }
 
         .modal-diamond-box::after {
@@ -376,10 +411,10 @@
 
         .modal-title {
             font-size: 1.2rem;
-            color: #fff;
+            color: var(--cf-text-main);
             margin-bottom: 20px;
             text-transform: uppercase;
-            border-bottom: 1px solid #444;
+            border-bottom: 1px solid var(--cf-border);
             padding-bottom: 10px;
             display: flex;
             justify-content: space-between;
@@ -392,42 +427,49 @@
             margin-bottom: 20px;
         }
 
-        .info-item label { display: block; color: #777; font-size: 0.7rem; margin-bottom: 5px; }
-        .info-item .value { color: var(--cf-accent); font-size: 1.1rem; font-family: var(--cf-font-mono); }
+        .info-item label { display: block; color: var(--cf-text-dim); font-size: 0.7rem; margin-bottom: 5px; }
+        .info-item .value { color: var(--cf-accent); font-size: 1.1rem; font-family: var(--cf-font-mono); font-weight: bold; }
 
-        .bool-matrix { background: #111; padding: 15px; border: 1px solid #333; }
-        .bool-matrix-title { color: #ccc; font-size: 0.8rem; margin-bottom: 15px; text-align: center; }
+        .bool-matrix { background: var(--cf-bg-td-sticky); padding: 15px; border: 1px solid var(--cf-border); }
+        .bool-matrix-title { color: var(--cf-text-dim); font-size: 0.8rem; margin-bottom: 15px; text-align: center; }
         .bool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .bool-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
         
         .bool-indicator {
             width: 16px; height: 16px;
             transform: rotate(45deg);
-            border: 2px solid #333;
+            border: 2px solid var(--cf-border);
             transition: background 0.3s;
         }
         .bool-indicator.true { background: var(--cf-success); box-shadow: 0 0 8px var(--cf-success); border-color: var(--cf-success); }
         .bool-indicator.false { background: var(--cf-danger); box-shadow: 0 0 8px var(--cf-danger); border-color: var(--cf-danger); }
-        .bool-label { font-size: 0.65rem; color: #666; }
+        .bool-label { font-size: 0.65rem; color: var(--cf-text-dim); }
 
         .rhombus-btn {
-            background: #333;
+            background: var(--cf-bg-th);
             color: var(--cf-accent);
-            border: none;
+            border: 1px solid var(--cf-border);
             padding: 10px 20px;
             font-family: var(--cf-font-mono);
             text-transform: uppercase;
             font-weight: bold;
             cursor: pointer;
             clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
-        .rhombus-btn:hover { background: #444; color: #fff; }
+        .rhombus-btn:hover { background: var(--cf-accent); color: var(--cf-text-inv); }
+        
+        /* 按钮的小型变体 */
+        .rhombus-btn.small {
+            padding: 5px 15px;
+            font-size: 0.8rem;
+            clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+        }
 
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-corner { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border: 1px solid #000; }
+        ::-webkit-scrollbar-track { background: var(--cf-bg-screen); }
+        ::-webkit-scrollbar-corner { background: var(--cf-bg-screen); }
+        ::-webkit-scrollbar-thumb { background: var(--cf-border); border: 1px solid var(--cf-bg-screen); }
         ::-webkit-scrollbar-thumb:hover { background: var(--cf-accent); }
 
     </style>
@@ -505,7 +547,7 @@
             }));
         };
 
-        const INITIAL_DATA = generateRows(30); // 增加行数以测试滚动
+        const INITIAL_DATA = generateRows(30);
 
         // --- 组件：用户信息弹窗 ---
         const UserInfoModal = ({ isOpen, onClose, columnData }) => {
@@ -564,8 +606,11 @@
                         <div key={log.id} className="log-entry">
                             <div className={`log-bullet ${log.type}`}></div>
                             <div className="log-content">
-                                <span style={{color: '#555'}}>[{log.time}]</span>{' '}
-                                <span style={{color: log.type === 'error' ? 'var(--cf-danger)' : log.type === 'warn' ? '#ffbb33' : '#ccc'}}>
+                                <span style={{color: 'var(--cf-text-dim)'}}>[{log.time}]</span>{' '}
+                                <span style={{
+                                    color: log.type === 'error' ? 'var(--cf-danger)' : 
+                                           log.type === 'warn' ? 'var(--cf-warn)' : 'var(--cf-text-main)'
+                                }}>
                                     {log.message}
                                 </span>
                             </div>
@@ -615,6 +660,7 @@
         const App = () => {
             const [activeTab, setActiveTab] = useState('status');
             const [data, setData] = useState(INITIAL_DATA);
+            const [isDarkMode, setIsDarkMode] = useState(true);
             const [logs, setLogs] = useState([
                 { id: 1, time: '10:00:00', type: 'info', message: 'System initialized.' },
                 { id: 2, time: '10:00:05', type: 'info', message: 'Viewport locked to 16:9 aspect ratio.' },
@@ -631,17 +677,27 @@
                 setModalState({ isOpen: true, columnData });
             };
 
+            const toggleTheme = () => {
+                setIsDarkMode(!isDarkMode);
+                addLog(`Theme switched to: ${!isDarkMode ? 'DARK_MODE' : 'LIGHT_MODE'}`, 'warn');
+            };
+
             return (
-                <div className="screen-wrapper">
+                <div className={`screen-wrapper ${isDarkMode ? '' : 'light-mode'}`}>
                     <div className="cassette-layout">
                         {/* 顶部 */}
                         <header className="header-panel">
                             <div className="brand-logo">
                                 <div className="brand-icon"></div>
-                                DIAMOND_OS v4.3
+                                DIAMOND_OS v4.4
                             </div>
-                            <div style={{fontSize: '0.8rem', color: '#666'}}>
-                                ASPECT: 16:9
+                            <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                                <button className="rhombus-btn small" onClick={toggleTheme}>
+                                    {isDarkMode ? '☼ DAY_MODE' : '☾ NIGHT_MODE'}
+                                </button>
+                                <div style={{fontSize: '0.8rem', color: 'var(--cf-text-dim)'}}>
+                                    ASPECT: 16:9
+                                </div>
                             </div>
                         </header>
 
@@ -664,7 +720,7 @@
                                     <DataTable data={data} onHeaderClick={handleHeaderClick} />
                                 )}
                                 {activeTab === 'config' && (
-                                    <div style={{padding: '40px', textAlign: 'center', color: '#555'}}>
+                                    <div style={{padding: '40px', textAlign: 'center', color: 'var(--cf-text-dim)'}}>
                                         [ CONFIGURATION MODULE LOCKED ]
                                         <br/><br/>
                                         Please contact administrator.
@@ -686,7 +742,7 @@
 
                         </div>
 
-                        {/* 弹窗组件 (现在被限制在 screen-wrapper 内部) */}
+                        {/* 弹窗组件 */}
                         <UserInfoModal 
                             isOpen={modalState.isOpen} 
                             columnData={modalState.columnData}

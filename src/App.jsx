@@ -7,6 +7,7 @@ import { INITIAL_DATA } from './data/config.js';
 const App = () => {
     const [activeTab, setActiveTab] = useState('status');
     const [data, setData] = useState(INITIAL_DATA);
+    const [isDarkMode, setIsDarkMode] = useState(true);
     const [logs, setLogs] = useState([
         { id: 1, time: '10:00:00', type: 'info', message: 'System initialized.' },
         { id: 2, time: '10:00:05', type: 'info', message: 'Viewport locked to 16:9 aspect ratio.' },
@@ -23,17 +24,27 @@ const App = () => {
         setModalState({ isOpen: true, columnData });
     };
 
+    const toggleTheme = () => {
+        setIsDarkMode(!isDarkMode);
+        addLog(`Theme switched to: ${!isDarkMode ? 'DARK_MODE' : 'LIGHT_MODE'}`, 'warn');
+    };
+
     return (
-        <div className="screen-wrapper">
+        <div className={`screen-wrapper ${isDarkMode ? '' : 'light-mode'}`}>
             <div className="cassette-layout">
                 {/* 顶部 */}
                 <header className="header-panel">
                     <div className="brand-logo">
                         <div className="brand-icon"></div>
-                        DIAMOND_OS v4.3
+                        DARK_GREY_MIRROR_MATRIX v0.1
                     </div>
-                    <div style={{fontSize: '0.8rem', color: '#666'}}>
-                        ASPECT: 16:9
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <button className="rhombus-btn small" onClick={toggleTheme}>
+                            {isDarkMode ? '☾ 灰镜模式' : '☼ 明镜模式'}
+                        </button>
+                        {/* <div style={{ fontSize: '0.8rem', color: 'var(--cf-text-dim)' }}>
+                            ASPECT: 16:9
+                        </div> */}
                     </div>
                 </header>
 
@@ -49,16 +60,16 @@ const App = () => {
 
                 {/* CRT 主屏幕框 */}
                 <div className="crt-frame">
-                    
+
                     {/* 上半部分：表格区域 */}
                     <div className="main-view">
                         {activeTab === 'status' && (
                             <DataTable data={data} onHeaderClick={handleHeaderClick} />
                         )}
                         {activeTab === 'config' && (
-                            <div style={{padding: '40px', textAlign: 'center', color: '#555'}}>
+                            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--cf-text-dim)' }}>
                                 [ CONFIGURATION MODULE LOCKED ]
-                                <br/><br/>
+                                <br /><br />
                                 Please contact administrator.
                             </div>
                         )}
@@ -79,8 +90,8 @@ const App = () => {
                 </div>
 
                 {/* 弹窗组件 */}
-                <UserInfoModal 
-                    isOpen={modalState.isOpen} 
+                <UserInfoModal
+                    isOpen={modalState.isOpen}
                     columnData={modalState.columnData}
                     onClose={() => setModalState({ ...modalState, isOpen: false })}
                 />
