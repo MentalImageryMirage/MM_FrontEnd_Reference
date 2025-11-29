@@ -325,14 +325,25 @@ body {
     justify-content: center;
     gap: 10px;
     flex-shrink: 0;
+    z-index: 2;
 }
 
 .diamond-dot { width: 4px; height: 4px; background: var(--cf-border); transform: rotate(45deg); }
 .diamond-dot.active { background: var(--cf-accent); }
 
-/* --- 下半部分：日志视图 --- */
-.log-view {
+/* --- 底部区域容器 (包含日志和控制面板) --- */
+.bottom-section {
     flex: 35;
+    display: flex;
+    flex-direction: row;
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* --- 日志视图 (60% 宽度) --- */
+.log-view {
+    flex: 6; /* 60% */
     background: var(--cf-bg-screen);
     padding: 15px;
     overflow-y: auto;
@@ -340,8 +351,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    position: relative;
-    z-index: 1;
+    border-right: 2px solid var(--cf-border);
 }
 
 .log-header-label {
@@ -364,7 +374,51 @@ body {
 .log-bullet.warn { background: var(--cf-warn); }
 .log-bullet.info { background: var(--cf-accent); }
 
+/* --- 控制面板 (40% 宽度) --- */
+.control-panel {
+    flex: 4; /* 40% */
+    background: var(--cf-bg-td-sticky); /* 稍微区别于屏幕背景 */
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
 
+.panel-label {
+    font-size: 0.7rem;
+    color: var(--cf-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+.cmd-input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--cf-border);
+    background: var(--cf-bg-td);
+    padding: 5px 10px;
+}
+
+.cmd-prompt { color: var(--cf-accent); margin-right: 8px; font-weight: bold; }
+
+.cmd-input {
+    background: transparent;
+    border: none;
+    color: var(--cf-text-main);
+    font-family: var(--cf-font-mono);
+    width: 100%;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    flex: 1;
+}
 
 /* --- 弹窗样式 --- */
 .modal-overlay {
@@ -449,6 +503,10 @@ body {
     cursor: pointer;
     clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 .rhombus-btn:hover { background: var(--cf-accent); color: var(--cf-text-inv); }
 

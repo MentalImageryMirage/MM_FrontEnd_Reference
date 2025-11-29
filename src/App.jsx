@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import DataTable from './components/DataTable.jsx';
 import LogConsole from './components/LogConsole.jsx';
 import UserInfoModal from './components/UserInfoModal.jsx';
+import ControlPanel from './components/ControlPanel.jsx';
 import { INITIAL_DATA } from './data/config.js';
 
 const App = () => {
@@ -27,6 +28,19 @@ const App = () => {
     const toggleTheme = () => {
         setIsDarkMode(!isDarkMode);
         addLog(`Theme switched to: ${!isDarkMode ? 'DARK_MODE' : 'LIGHT_MODE'}`, 'warn');
+    };
+
+    // 处理控制面板的动作
+    const handleControlAction = (action, payload = '') => {
+        if (action === 'CMD_EXEC') {
+            addLog(`Executing command: ${payload}`, 'info');
+            // 模拟命令处理延迟
+            setTimeout(() => {
+                addLog(`Command '${payload}' executed successfully.`, 'success');
+            }, 600);
+        } else {
+            addLog(`Action triggered: ${action}`, 'warn');
+        }
     };
 
     return (
@@ -84,8 +98,14 @@ const App = () => {
                         <div className="diamond-dot"></div>
                     </div>
 
-                    {/* 下半部分：日志 */}
-                    <LogConsole logs={logs} />
+                    {/* 下半部分：日志 + 控制面板 */}
+                    <div className="bottom-section">
+                        {/* 左侧 60% 日志 */}
+                        <LogConsole logs={logs} />
+
+                        {/* 右侧 40% 功能面板 */}
+                        <ControlPanel activeTab={activeTab} onAction={handleControlAction} />
+                    </div>
 
                 </div>
 
